@@ -24,7 +24,22 @@ async function uploadToCloudinary(file) {
   return data.secure_url.replace("/upload/", "/upload/f_auto,q_auto/");
 }
 
+let UPLOAD_BUSY_COUNT = 0;
 
+function showUploadBusy(label = "Uploading...") {
+  UPLOAD_BUSY_COUNT++;
+  const el = document.getElementById("uploadIndicator");
+  if (!el) return;
+  el.querySelector(".txt").textContent = label;
+  el.style.display = "flex";
+}
+
+function hideUploadBusy() {
+  UPLOAD_BUSY_COUNT = Math.max(0, UPLOAD_BUSY_COUNT - 1);
+  const el = document.getElementById("uploadIndicator");
+  if (!el) return;
+  if (UPLOAD_BUSY_COUNT === 0) el.style.display = "none";
+}
 
 
 // ===== USER HEADER CACHE (instant profile header) =====
@@ -670,6 +685,51 @@ auth.onAuthStateChanged(user => {
 
 
 
+//fast delet post//
+// ===== Firestore batch delete helper =====
+async function deleteQueryBatch(query, batchSize = 400) {
+  while (true) {
+    const snap = await query.limit(batchSize).get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+
+    if (snap.size < batchSize) break;
+  }
+}
+
+// ===== Delete comments + replies tree =====
+async function deleteCommentsTree(postRef) {
+  // comments fetch (limit বড় করলে slow হতে পারে)
+  const csnap = await postRef.collection("comments").get();
+
+  for (const cdoc of csnap.docs) {
+    const cRef = cdoc.ref;
+
+    // replies delete
+    await deleteQueryBatch(cRef.collection("replies"), 400);
+
+    // comment doc delete
+    await cRef.delete();
+  }
+}
+
+// ===== Full delete: reactions + comments/replies + post =====
+async function deletePostWithAllData(postId) {
+  const postRef = db.collection("posts").doc(postId);
+
+  // 1) reactions
+  await deleteQueryBatch(postRef.collection("reactions"), 400);
+
+  // 2) comments + replies
+  await deleteCommentsTree(postRef);
+
+  // 3) main post doc
+  await postRef.delete();
+}
+
 
 //save cover/profile
 auth.onAuthStateChanged(user => {
@@ -1119,17 +1179,30 @@ if (e.target.closest(".reaction-box")) return;
   }
 
   // DELETE POST
-  if (e.target.classList.contains("delete")) {
-    const postEl = e.target.closest(".post");
-    if (!postEl) return;
+if (e.target.classList.contains("delete")) {
+  e.stopPropagation();
 
-    const id = postEl.dataset.id;
- 
- db.collection("posts")
-  .doc(id)
-  .delete();
-  }
+  const postEl = e.target.closest(".post");
+  if (!postEl) return;
 
+  const postId = postEl.dataset.id;
+
+  // ✅ instant UI remove
+  document.querySelectorAll(`.post[data-id="${postId}"]`).forEach(x => x.remove());
+
+  // ✅ remove from cache so it can't re-render back
+  FEED_CACHE_MAP?.delete?.(postId);
+  FEED_CACHE = (FEED_CACHE || []).filter(p => p.postId !== postId);
+  try { localStorage.setItem("everest_feed_cache_v1", JSON.stringify(FEED_CACHE.slice(0,40))); } catch(e){}
+
+  // ✅ silent full delete
+  deletePostWithAllData(postId).catch(err => {
+    console.error("FULL DELETE FAILED:", err);
+    alert("Delete failed");
+  });
+
+  return;
+}
   // DOWNLOAD
   if (e.target.classList.contains("download")) {
     const media = e.target.closest(".post")?.querySelector("img,video");
@@ -1263,26 +1336,48 @@ imageInput.onchange = () => {
 
  
 document.getElementById("mediaPostBtn").onclick = async () => {
-  const caption = document.getElementById("mediaCaptionInput").value.trim();
+  const modal = document.getElementById("mediaCaptionModal");
+  const input = document.getElementById("mediaCaptionInput");
+  const btn   = document.getElementById("mediaPostBtn");
+
+  const caption = (input?.value || "").trim();
+  const file = selectedFile;
+  const type = selectedMediaType;
+
+  if (!file || !type) {
+    alert("Please select photo/video first");
+    return;
+  }
+
+  // ✅ modal instantly close + red indicator ON
+  if (modal) modal.style.display = "none";
+  showUploadBusy(type === "video" ? "Uploading video..." : "Uploading photo...");
+
+  // double click block
+  if (btn) { btn.disabled = true; btn.classList.add("loading"); }
 
   try {
-    const mediaUrl = await uploadToCloudinary(selectedFile);
+    const mediaUrl = await uploadToCloudinary(file);
 
     await savePostToFirebase({
-      type: selectedMediaType,
+      type,
       media: mediaUrl,
-      caption: caption
+      caption
     });
 
-    document.getElementById("mediaCaptionInput").value = "";
-    document.getElementById("mediaCaptionModal").style.display = "none";
+    // cleanup
+    if (input) input.value = "";
+    selectedFile = null;
+    selectedMediaType = null;
+
   } catch (err) {
     console.error(err);
-    alert("Upload failed");
+    alert(err?.message || "Upload failed");
+  } finally {
+    hideUploadBusy();
+    if (btn) { btn.disabled = false; btn.classList.remove("loading"); }
   }
 };
-
-
 
 
   //firebase
@@ -1889,9 +1984,14 @@ function startPostsListener(){
 
       REELS_SNAPSHOT = snapshot;
 
-      snapshot.forEach(doc => {
-        const p = normalizePost(doc);
-        FEED_CACHE_MAP.set(p.postId, p);
+      // ✅ handle add/modify/remove properly
+      snapshot.docChanges().forEach((ch) => {
+        if (ch.type === "removed") {
+          FEED_CACHE_MAP.delete(ch.doc.id);
+        } else {
+          const p = normalizePost(ch.doc);
+          FEED_CACHE_MAP.set(p.postId, p);
+        }
       });
 
       FEED_CACHE = Array.from(FEED_CACHE_MAP.values())
@@ -1902,7 +2002,6 @@ function startPostsListener(){
       persistFeedCache();
     });
 }
-
 // 🔥 Boot instantly
 document.addEventListener("DOMContentLoaded", () => {
   loadFeedCache();        // local cache
