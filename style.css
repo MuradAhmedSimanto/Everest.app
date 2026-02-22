@@ -3758,3 +3758,11 @@ body.reels-open{
 .mchat-svg { width: 20px; height: 20px; display: block; }
 
 .mchat-ico--red:active { color: #d91515; } /* pressed */
+
+/*rells icon*/
+.menu-icon {
+  color:#65676B;
+}
+#reelsIcon svg {
+  transform: translateY(3px);
+}
