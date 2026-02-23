@@ -3798,3 +3798,16 @@ body.reels-open{
   50%{ transform: scale(1.25); opacity: .7; }
   100%{ transform: scale(1); opacity: 1; }
 }
+/*coment model up to rells page*/
+#commentsModal.open{
+  position: fixed;
+  inset: 0;
+  display: flex;
+  z-index: 999999;
+}
+
+/* reels এর z-index কম রাখো */
+#reelsPage{
+  position: relative;
+  z-index: 1000;
+}
