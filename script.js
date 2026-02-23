@@ -1536,75 +1536,65 @@ await rRef.set({
 }
 
 // ================= CLICK HANDLER (REACTION + CLOSE) =================
-document.addEventListener("click", async (e) => {
-  // 1) emoji select
+document.addEventListener("click", (e) => {
   const emojiEl = e.target.closest(".reaction-box span");
-  if (emojiEl) {
-    const postEl = emojiEl.closest(".post");
-    if (!postEl) return;
+  if (!emojiEl) return;
 
-    const postId = postEl.dataset.id;
-    const emoji = emojiEl.innerText;
+  e.preventDefault();
+  e.stopPropagation(); // ✅ important: outside click handler যেন interfere না করে
 
-    if (!auth.currentUser) {
-      promptSignup("Please signup to react");
-      return;
-    }
+  const postEl = emojiEl.closest(".post");
+  if (!postEl) return;
 
+  const postId = postEl.dataset.id;
+
+  // ✅ 0.01s এর মধ্যে close: আগে close করো, পরে save
+  const box = postEl.querySelector(".reaction-box");
+  if (box) box.classList.remove("open");
+
+  if (!auth.currentUser) {
+    promptSignup("Please signup to react");
+    return;
+  }
+
+  // async কাজটা background-like (but still now) — UI already updated
+  (async () => {
     try {
       const uid = auth.currentUser.uid;
+      const rRef = db.collection("posts").doc(postId).collection("reactions").doc(uid);
 
-      const rRef = db
-        .collection("posts")
-        .doc(postId)
-        .collection("reactions")
-        .doc(uid);
+      const type = emojiEl.dataset.type; // like/love/haha...
+      let userName = (MEMORY_PROFILE_NAME || "").trim();
+      let userPhoto = "";
 
-      const type = emojiEl.dataset.type; // data-type থেকে আসবে
-let userName = (MEMORY_PROFILE_NAME || "").trim();
+      // ✅ single fetch (তোমার কোডে ডাবল fetch ছিল)
+      const us = await db.collection("users").doc(uid).get();
+      if (us.exists) {
+        const d = us.data() || {};
+        userName = userName || [d.firstName, d.lastName].filter(Boolean).join(" ").trim();
+        userPhoto = d.profilePic || "";
+        MEMORY_PROFILE_NAME = userName || MEMORY_PROFILE_NAME;
+      }
 
-if (!userName) {
-  const us = await db.collection("users").doc(uid).get();
-  if (us.exists) {
-    const d = us.data();
-    userName = [d.firstName, d.lastName].filter(Boolean).join(" ").trim();
-    MEMORY_PROFILE_NAME = userName;
-  }
-}
-
-let userPhoto = "";
-
-const us = await db.collection("users").doc(uid).get();
-if (us.exists) {
-  const d = us.data();
-  userName = userName || [d.firstName, d.lastName].filter(Boolean).join(" ").trim();
-  userPhoto = d.profilePic || "";
-  MEMORY_PROFILE_NAME = userName || MEMORY_PROFILE_NAME;
-}
-
-await rRef.set({
-  type,
-  emoji: emojiEl.innerText,
-  userId: uid,
-  userName: userName || "User",
-  userPhoto: userPhoto || "",
-  createdAt: Date.now()
-});
-
-
-
-      // close this box
-      const box = postEl.querySelector(".reaction-box");
-      if (box) box.classList.remove("open");
+      await rRef.set({
+        type: type || "like",
+        emoji: emojiEl.innerText,
+        userId: uid,
+        userName: userName || "User",
+        userPhoto: userPhoto || "",
+        createdAt: Date.now()
+      });
 
     } catch (err) {
       console.error(err);
     }
+  })();
 
-    return; // stop here so it doesn't trigger closeAll below
-  }
+  return;
+});
 
-  // 2) clicked outside → close all boxes
+// outside click -> close all boxes (keep this separate)
+document.addEventListener("click", (e) => {
   if (!e.target.closest(".like-btn") && !e.target.closest(".reaction-box")) {
     closeAllReactionBoxes();
   }
@@ -1619,7 +1609,6 @@ function closeAllReactionBoxes() {
 }
 
 // ================= REACTION LISTENER CACHE =================
-const REACTION_LISTENER_ATTACHED = new Set();
 //reaction count//
 const reactionEmoji = {
   like: "👍",
@@ -1679,26 +1668,46 @@ function renderFbReactionSummary(reactions, container){
     .map(t => `<span>${reactionEmoji[t] || "👍"}</span>`)
     .join("");
 
-  const text = total > 1 ? `${firstName} +${total-1}` : firstName;
+const text = total > 1 ? `${firstName} +${total-1}` : firstName;
 
-  container.innerHTML = `
-    <div class="reaction-icons">${iconsHTML}</div>
-    <div class="reaction-text">${text}</div>
-  `;
+container.innerHTML = `
+  <div class="reaction-icons">${iconsHTML}</div>
+  <div class="reaction-text">${text}</div>
+`;
 }
 
+
+// ===== REACTION LISTENER SYSTEM (PASTE THIS) =====
+const REACTION_UNSUBS = new Map(); // key -> unsub
+
+function getReactionKey(postId, postEl){
+  const scope = postEl.closest("#profileFeed") ? "profile" : "home";
+  return postId + "|" + scope;
+}
+
+function cleanupReactionListeners(scope = null){
+  for (const [key, unsub] of REACTION_UNSUBS.entries()){
+    if (!scope || key.endsWith("|" + scope)){
+      try { unsub && unsub(); } catch(e){}
+      REACTION_UNSUBS.delete(key);
+    }
+  }
+}
+
+// ✅ REPLACE your old attachReactionListener with this one
 function attachReactionListener(postId, postEl) {
-  const key = postId + "|" + (postEl.closest("#profileFeed") ? "profile" : "home");
-  if (REACTION_LISTENER_ATTACHED.has(key)) return;
-  REACTION_LISTENER_ATTACHED.add(key);
+  const key = getReactionKey(postId, postEl);
+
+  // already listening for this post in this feed
+  if (REACTION_UNSUBS.has(key)) return;
 
   const summaryEl = postEl.querySelector(".reaction-summary");
   const likeTextEl = postEl.querySelector(".like-text");
 
-  db.collection("posts").doc(postId).collection("reactions")
+  const unsub = db.collection("posts").doc(postId).collection("reactions")
     .onSnapshot((snap) => {
       const reactions = [];
-      let myEmoji = null;
+      let myType = null;
       const myUid = auth.currentUser?.uid;
 
       snap.forEach((d) => {
@@ -1707,38 +1716,28 @@ function attachReactionListener(postId, postEl) {
           type: data.type,
           emoji: data.emoji,
           userName: data.userName,
-          createdAt: data.createdAt || 0,
+          createdAt: data.createdAt || 0
         });
 
-        if (myUid && d.id === myUid) myEmoji = data.emoji;
+        if (myUid && d.id === myUid) myType = data.type || "like";
       });
 
       renderFbReactionSummary(reactions, summaryEl);
-    if (likeTextEl) {
 
-  let myType = null;
-  const myUid2 = auth.currentUser?.uid;
+      if (likeTextEl) {
+        if (myType) {
+          const emoji = reactionEmoji[myType] || "👍";
+          likeTextEl.textContent = emoji + " " + (reactionLabel[myType] || "Like");
+          likeTextEl.style.color = reactionColor[myType] || "#65676b";
+        } else {
+          likeTextEl.textContent = "👍 Like";
+          likeTextEl.style.color = "#65676b";
+        }
+      }
+    });
 
-  // নিজের reaction খুঁজে বের কর
-  snap.forEach((d) => {
-    if (myUid2 && d.id === myUid2) {
-      const data = d.data() || {};
-      myType = data.type || "like";
-    }
-  });
-
-  if (myType) {
-    const emoji = reactionEmoji[myType] || "👍";
-    likeTextEl.textContent = emoji + " " + (reactionLabel[myType] || "Like");
-    likeTextEl.style.color = reactionColor[myType] || "#65676b";
-  } else {
-    likeTextEl.textContent = "👍 Like";
-    likeTextEl.style.color = "#65676b";
-  }
+  REACTION_UNSUBS.set(key, unsub);
 }
- });
-}
-
 
 //show reaction//
 const reactorsModal = document.getElementById("reactorsModal");
@@ -1942,7 +1941,7 @@ function renderFeedFromCache(){
   if (!feed) return;
 
   if (!FEED_CACHE.length) return;
-
+cleanupReactionListeners("home");
   feed.innerHTML = "";
 
   FEED_CACHE.forEach(p => {
