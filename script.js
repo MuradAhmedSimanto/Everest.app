@@ -4987,9 +4987,7 @@ bindNav("homeIcon", () => {
 bindNav("profileIcon", () => {
   hideReelsPage?.();
   hideFriendsPage?.();
-  // তোমার existing profileIcon.onclick logic থাকলে সেটা এখানে call করো:
-  if (typeof window.__openMyProfile === "function") window.__openMyProfile();
-  else gotoPage("profile");
+  window.__openMyProfile();//only sinup user//
 });
 
 bindNav("notificationIcon", () => {
