@@ -10,24 +10,22 @@
 <body>
 
 
-<!-- NAVBAR -->
+<!-- NAVBAR --> 
 <div class="navbar">
   <h2 class="logo">Everest</h2>
   <div class="top-icons">
-    <a href="https://tinyurl.com/Murad-Ai" target="_blank">
-      <i class="fa-solid fa-bolt"></i>
-    </a>
+    
     <i class="fa-solid fa-magnifying-glass"></i>
     <i class="fa-solid fa-bell" id="notificationIcon"></i>
     <i class="fa-solid fa-message" id="messageIcon"></i>
+    <i class="fa-solid fa-bars menu-icon" id="menuBtn"></i>
   </div>
 </div>
 
 <!-- MENU BAR -->
 <div class="menu-bar">
   <i class="fa-solid fa-house menu-icon active" id="homeIcon"></i>
-  <i class="fa-solid fa-user menu-icon" id="profileIcon"></i>
-
+ 
 <div class="menu-icon" id="reelsIcon">
   <svg viewBox="0 0 24 24" width="26" height="26"
        fill="none"
@@ -46,8 +44,43 @@
 </div>
 
 
+
+<!-- PLUS ICON (after reels) -->
+<div class="menu-icon plus-wrap" id="plusWrap">
+  <i class="fa-solid fa-plus" id="plusIcon"></i>
+
+  <!-- dropdown -->
+  <div class="plus-menu" id="plusMenu">
+    <div class="pmx-item" data-act="text">
+      <i class="fa-solid fa-pen-to-square"></i>
+      <span>Text post</span>
+    </div>
+
+    <div class="pmx-item" data-act="media">
+      <i class="fa-regular fa-image"></i>
+      <span>Media post</span>
+    </div>
+
+    <div class="pmx-item" data-act="reels">
+      <i class="fa-solid fa-clapperboard"></i>
+      <span>Reels</span>
+    </div>
+
+    <div class="pmx-item" data-act="story">
+      <i class="fa-solid fa-circle-plus"></i>
+      <span>Story</span>
+    </div>
+
+    <div class="pmx-item" data-act="ai">
+  <i class="fa-solid fa-bolt"></i>
+  <span>AI</span>
+</div>
+  </div>
+</div>
+
   <i class="fa-solid fa-user-group menu-icon" id="friendIcon"></i>
-  <i class="fa-solid fa-bars menu-icon" id="menuBtn"></i>
+  <i class="fa-solid fa-user menu-icon" id="profileIcon"></i>
+  
 </div>
 
 <!--upload post-->
@@ -152,7 +185,7 @@
       <strong>Everest</strong> started following you
     </div>
   </div>
-</div>
+
 
 
 
@@ -315,30 +348,23 @@
 
 <!-- HOME PAGE -->
 <div id="homePage">
-  <div class="post-box">
-<!-- TEXT POST MODAL -->
-<div id="textPostModal" class="auth-modal">
-  <div class="auth-box">
-    <h3>Create post</h3>
-    <textarea
-      id="textPostInput"
-      placeholder="What's on your mind?"
-    ></textarea>
-  <button id="textPostBtn">Post</button>
-  </div>
-</div>
-    <div class="post-input">
-      <img id="profilePic" src="https://i.imgur.com/6VBx3io.png">
-      <div class="mind">What are you thingking?</div>
-   <button id="postBtn" type="button" class="post-logo-btn" aria-label="Create post">
-  <img src="new post btn logo 2.png" alt="Post">
-</button>
+
+  <!-- TEXT POST MODAL -->
+  <div id="textPostModal" class="auth-modal">
+    <div class="auth-box">
+      <h3>Create post</h3>
+      <textarea id="textPostInput" placeholder="What's on your mind?"></textarea>
+      <button id="textPostBtn">Post</button>
     </div>
   </div>
-  <input type="file" id="imageInput" accept="image/*,video/*" hidden>
-  <div id="feed"></div>
-</div>
 
+  <!-- MEDIA INPUT (for dropdown media post) -->
+  <input type="file" id="imageInput" accept="image/*,video/*" hidden>
+
+  <!-- FEED -->
+  <div id="feed"></div>
+
+</div>
 <!-- PROFILE PAGE -->
 <div id="profilePage">
 <input type="file" id="profileInput" accept="image/*" hidden>
