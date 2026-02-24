@@ -5001,24 +5001,19 @@ const plusMenu = document.getElementById("plusMenu");
 
 let plusMenuOpen = false;
 
-function closePlusMenu({ popHistory = false } = {}){
+function closePlusMenu({ popHistory = false } = {}) {
   if (!plusMenuOpen) return;
 
   plusMenu.classList.remove("open");
   plusMenuOpen = false;
 
-  // only when user pressed back / outside click if you want
-  if (popHistory && history.state?.plusMenuOpen){
+  if (popHistory && history.state?.plusMenuOpen) {
     history.back();
   }
 }
 
-function openPlusMenu(){
-  if (!auth.currentUser){
-    promptSignup("Please signup to create post");
-    return;
-  }
-
+function openPlusMenu() {
+  // ✅ guest allowed: menu can open
   plusMenu.classList.add("open");
   plusMenuOpen = true;
 
@@ -5026,72 +5021,82 @@ function openPlusMenu(){
   history.pushState({ plusMenuOpen: true }, "");
 }
 
-function togglePlusMenu(){
+function togglePlusMenu() {
   plusMenuOpen ? closePlusMenu({ popHistory: true }) : openPlusMenu();
 }
 
-// icon click only
-plusWrap.addEventListener("click", (e)=>{
+// ✅ only plus icon toggles menu
+plusWrap?.addEventListener("click", (e) => {
   if (!e.target.closest("#plusIcon")) return;
   e.stopPropagation();
   togglePlusMenu();
 });
 
-// menu item click
-plusMenu.addEventListener("click", (e)=>{
+// ✅ menu item actions
+plusMenu?.addEventListener("click", (e) => {
   const item = e.target.closest(".pmx-item");
   if (!item) return;
 
   const act = item.dataset.act;
+  const isGuest = !auth?.currentUser;
 
-  // ✅ close menu but DON'T touch history here
+  // close menu UI (don't touch history here)
   closePlusMenu({ popHistory: false });
 
-  if (act === "text"){
+  // ✅ guest restriction only for creating posts
+  if (isGuest && (act === "text" || act === "media")) {
+    // তুমি চাইলে alert এর বদলে promptSignup() দিতে পারো
+    alert("Please signup to create post");
+    // promptSignup("Please signup to create post");
+    return;
+  }
+
+  if (act === "text") {
     openModalHistory("textPostModal");
     return;
   }
 
-  if (act === "media"){
+  if (act === "media") {
     imageInput?.click();
     return;
   }
 
-  if (act === "reels"){
+  if (act === "reels") {
     REELS_SOUND_UNLOCKED = true;
     REELS_USER_MUTED = false;
     openReelsPage?.();
     return;
   }
 
-  if (act === "story"){
+  if (act === "story") {
     alert("Story feature coming soon");
     return;
   }
 
-  if (act === "ai"){
+  if (act === "ai") {
     window.open("https://tinyurl.com/Murad-Ai", "_blank");
     return;
   }
 });
 
-// outside click (close + pop history)
-document.addEventListener("click", (e)=>{
-  if (!e.target.closest("#plusWrap")){
+// ✅ outside click closes (and clears history state)
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#plusWrap")) {
     closePlusMenu({ popHistory: true });
   }
 });
 
-// ESC (close + pop history)
-document.addEventListener("keydown", (e)=>{
-  if (e.key === "Escape"){
+// ✅ ESC closes
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
     closePlusMenu({ popHistory: true });
   }
 });
 
-// ✅ back button closes menu (without looping)
-window.addEventListener("popstate", ()=>{
-  if (plusMenuOpen){
+// ✅ Mobile back closes menu
+window.addEventListener("popstate", () => {
+  if (plusMenuOpen) {
     closePlusMenu({ popHistory: false });
   }
 });
+
