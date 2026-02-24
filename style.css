@@ -109,32 +109,51 @@ body.nav-hidden .menu-bar{
   box-shadow: 0 1px 0 #d0d4d9;
 }
 /* ================= MENU BAR ================= */
-.menu-bar {
+
+:root{
+  --navbar-h: 54px;
+  --menubar-h: 46px;   /* আগে 60 ছিল */
+}
+body{
+  padding-bottom: var(--menubar-h) !important;
+}
+.menu-bar{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: var(--menubar-h);
   background: #fff;
+
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;   /* 🔥 center না, top align */
 
-  height: 48px;      
-  padding: 0;       
+  padding-top: 6px;          /* 🔥 icon একটু উপরে উঠবে */
+  padding-bottom: 0;
 
-  border-top: 1px solid #dbdbdb;  
-  border-bottom: none;
-
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 999;
+  border-top: 1px solid #dbdbdb;
+  z-index: 9999;
 }
 .menu-bar i {
   font-size: 22px;
   color: #65676b;
   cursor: pointer;
-  padding: 6px 12px;
+
+  padding: 2px 12px;        /* আগে 6px ছিল */
   border-radius: 8px;
+
+  transform: translateY(-4px);   /* 🔥 icon উপরে উঠবে */
+}
+.menu-bar .menu-icon {
+  transform: translateY(-8px);
 }
 
+/* ✅ plus icon same line fix */
+.menu-bar .plus-wrap{
+  transform: translateY(-4px);   /* -8 না, কম দাও */
+}
 /* ================= LOGO & ICONS ================= */
 .logo {
  color: #e60023;
@@ -3858,7 +3877,7 @@ body.reels-open{
 /*menubar down*/
 :root{
   --navbar-h: 54px;
-  --menubar-h: 60px; 
+  --menubar-h: 46px; 
 }
 .menu-bar{
   position: fixed;
