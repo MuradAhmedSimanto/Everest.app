@@ -120,7 +120,7 @@ body.nav-hidden .menu-bar{
   top: 54px;
   left: 0;
   width: 100%;
-  height: 54px;
+  height: 40px;
   z-index: 999;
 }
 .menu-bar i {
