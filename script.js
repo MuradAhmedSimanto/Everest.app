@@ -5208,17 +5208,18 @@ async function setProfileActionsForUid(profileUid) {
     if (followingEl) followingEl.textContent = String((+followingEl.textContent || 0) + delta);
   };
 
-  // ---------- OWNER ----------
-  if (isOwner) {
-    followBtn.textContent = "Create Post";
-    msgBtn.textContent = "Add Story";
+ // ---------- OWNER ----------
+if (isOwner) {
+  followBtn.textContent = "Create Post";
+  msgBtn.textContent = "Add Story";
 
-    followBtn.onclick = () => openMediaPostFlow();
-    msgBtn.onclick = () => alert("Story feature coming soon");
+  followBtn.onclick = () => {
+    imageInput?.click();
+  };
 
-    return;
-  }
-
+  msgBtn.onclick = () => alert("Story feature coming soon");
+  return;
+}
   // ---------- OTHER USER ----------
   followBtn.textContent = "Follow";
   msgBtn.textContent = "Message";
