@@ -141,18 +141,17 @@ body{
   color: #65676b;
   cursor: pointer;
 
-  padding: 2px 12px;        /* আগে 6px ছিল */
+  padding: 2px 12px;    
   border-radius: 8px;
 
-  transform: translateY(-4px);   /* 🔥 icon উপরে উঠবে */
+  transform: translateY(-4px);  
 }
 .menu-bar .menu-icon {
   transform: translateY(-8px);
 }
 
-/* ✅ plus icon same line fix */
 .menu-bar .plus-wrap{
-  transform: translateY(-4px);   /* -8 না, কম দাও */
+  transform: translateY(-4px);   
 }
 /* ================= LOGO & ICONS ================= */
 .logo {
@@ -3946,3 +3945,14 @@ body.nav-hidden{
   font-size: 16px;
 }
 
+/*profile up no gap*/
+body.profile-mode{
+  padding-top: 0 !important;        
+}
+body.profile-mode #profilePage{
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+body.profile-mode .cover-wrapper{
+  margin-top: 0 !important;
+}
