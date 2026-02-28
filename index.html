@@ -11,19 +11,45 @@
 
 
 <!-- NAVBAR --> 
-<div class="navbar">
-  <h2 class="logo">Everest</h2>
-  <div class="top-icons">
-    
-    <i class="fa-solid fa-magnifying-glass"></i>
+<!-- ✅ NAVBAR -->
+<div class="navbar" id="navbar">
+  <h2 class="logo" id="navLogo">Everest</h2>
+
+  <div class="top-icons" id="navIcons">
+    <i class="fa-solid fa-magnifying-glass" id="searchIcon"></i>
     <i class="fa-solid fa-bell" id="notificationIcon"></i>
     <i class="fa-solid fa-message" id="messageIcon"></i>
     <i class="fa-solid fa-bars menu-icon" id="menuBtn"></i>
   </div>
 </div>
 
+<!-- ✅ BOTTOM NAV (example id) -->
+<!-- তোমার bottom nav যদি অন্য id হয়, এটা বদলে দাও -->
+<div id="bottomNav"></div>
+
+<!-- ✅ FULL SCREEN SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay" aria-hidden="true">
+  <div class="search-topbar">
+    <button class="app-back-btn" id="searchBackBtn" aria-label="Back">
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="search-input-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="searchInput" type="text" placeholder="Search Everest" autocomplete="off" />
+      <button class="search-clear" id="searchClearBtn" aria-label="Clear">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-results" id="searchResultsList"></div>
+</div>
+
+
+
 <!-- MENU BAR -->
-<div class="menu-bar">
+<div class="menu-bar" id="bottomNav">
   <i class="fa-solid fa-house menu-icon active" id="homeIcon"></i>
  
 <div class="menu-icon" id="reelsIcon">
@@ -77,11 +103,11 @@
 </div>
   </div>
 </div>
-
   <i class="fa-solid fa-user-group menu-icon" id="friendIcon"></i>
   <i class="fa-solid fa-user menu-icon" id="profileIcon"></i>
-  
 </div>
+
+
 
 <!--upload post-->
 <div id="uploadIndicator" class="upload-indicator" style="display:none;">
@@ -406,11 +432,10 @@
 
 
   <!-- FOLLOW INFO -->
-  <div class="follow-info">
-    <span><strong>0</strong> followers</span>
-    <span><strong>0</strong> following</span>
-  </div>
-
+ <div class="follow-info">
+  <span><strong id="followersCount">0</strong> followers</span>
+  <span><strong id="followingCount">0</strong> following</span>
+</div>
   <!-- BIO -->
   <div class="profile-header">
     <div class="profile-text">
@@ -569,13 +594,17 @@
   </div>
 </div>
 
-
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
+
+
+
+
+
