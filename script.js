@@ -5122,178 +5122,177 @@ window.addEventListener("popstate", () => {
 });
 
 //follow/message//
-async function setProfileActionsForUid(profileUid) {
+// ================= PROFILE ACTIONS (FAST FOLLOW + REALTIME STATE + COUNTS) =================
+function setProfileActionsForUid(profileUid) {
   const followBtn = document.querySelector(".profile-actions .follow-btn");
   const msgBtn    = document.querySelector(".profile-actions .message-btn");
-  if (!followBtn || !msgBtn) return;
+  if (!followBtn || !msgBtn || !profileUid) return () => {};
 
-  const me = auth.currentUser?.uid || "";
-  const isOwner = (me && me === profileUid);
+  const meUid = auth.currentUser?.uid || "";
+  const isOwner = meUid && meUid === profileUid;
 
-  // reset (avoid old onclick leak)
+  // ---- cleanup holders (avoid duplicate listeners / memory leaks)
+  let unsubCounts = null;
+  let unsubFollowState = null;
+
+  // ---- refs
+  const userRef = (uid) => db.collection("users").doc(uid);
+  const followingDoc = (fromUid, toUid) => userRef(fromUid).collection("following").doc(toUid);
+  const followersDoc = (targetUid, fromUid) => userRef(targetUid).collection("followers").doc(fromUid);
+
+  // ================= UI HELPERS =================
+  function setFollowUI(following, loading = false) {
+    followBtn.disabled = !!loading;
+    followBtn.textContent = loading
+      ? (following ? "Following..." : "Follow...")
+      : (following ? "Following" : "Follow");
+
+    followBtn.classList.toggle("is-following", !!following);
+  }
+
+  function setOwnerUI() {
+    followBtn.disabled = false;
+    followBtn.classList.remove("is-following");
+    followBtn.textContent = "Create Post";
+    msgBtn.textContent = "Add Story";
+  }
+
+  // ================= REALTIME COUNTS =================
+  function startCounts(uid) {
+    const uref = userRef(uid);
+
+    const unsub1 = uref.collection("followers").onSnapshot((snap) => {
+      const el = document.getElementById("followersCount");
+      if (el) el.textContent = String(snap.size || 0);
+    });
+
+    const unsub2 = uref.collection("following").onSnapshot((snap) => {
+      const el = document.getElementById("followingCount");
+      if (el) el.textContent = String(snap.size || 0);
+    });
+
+    return () => { unsub1(); unsub2(); };
+  }
+
+  // ================= REALTIME FOLLOW STATE =================
+  function startFollowState(targetUid) {
+    if (!auth.currentUser || !meUid) {
+      setFollowUI(false, false);
+      return () => {};
+    }
+
+    // Listen to "am I following this user?"
+    const ref = followingDoc(meUid, targetUid);
+    return ref.onSnapshot((doc) => {
+      // This will also correct the UI if write fails / or changes from other device.
+      const isFollowing = doc.exists;
+      setFollowUI(isFollowing, false);
+    });
+  }
+
+  // ================= FAST TOGGLE (BATCH) =================
+  async function toggleFollowFast(targetUid, shouldFollow) {
+    const now = Date.now();
+
+    const meFollowingRef = followingDoc(meUid, targetUid);
+    const targetFollowersRef = followersDoc(targetUid, meUid);
+
+    const batch = db.batch();
+
+    if (shouldFollow) {
+      batch.set(meFollowingRef, { userId: targetUid, createdAt: now }, { merge: true });
+      batch.set(targetFollowersRef, { userId: meUid, createdAt: now }, { merge: true });
+    } else {
+      batch.delete(meFollowingRef);
+      batch.delete(targetFollowersRef);
+    }
+
+    await batch.commit();
+    return shouldFollow;
+  }
+
+  // ================= RESET HANDLERS =================
   followBtn.onclick = null;
   msgBtn.onclick = null;
 
-  // ---------- helpers ----------
-  const ensureMediaPicker = () => {
-    let picker = document.getElementById("mediaPicker");
-    if (!picker) {
-      picker = document.createElement("input");
-      picker.id = "mediaPicker";
-      picker.type = "file";
-      picker.accept = "image/*,video/*";
-      picker.hidden = true;
-      document.body.appendChild(picker);
-    }
-    return picker;
-  };
+  // ================= OWNER VIEW =================
+  if (isOwner) {
+    setOwnerUI();
 
-  const openModalSafe = (modalId) => {
-    if (typeof openModalHistory === "function") {
-      openModalHistory(modalId);
-      return;
-    }
-    const modal = document.getElementById(modalId);
-    if (modal) {
-      modal.style.display = "flex";
-      document.body.classList.add("modal-open");
-    }
-  };
+    followBtn.onclick = () => imageInput?.click();
+    msgBtn.onclick = () => alert("Story feature coming soon");
 
-  const openMediaModalWithFile = (file) => {
-    if (!file) return;
+    unsubCounts?.();
+    unsubCounts = startCounts(profileUid);
 
-    const isVideo = file.type?.startsWith("video/");
-    const isImage = file.type?.startsWith("image/");
-    if (!isVideo && !isImage) {
-      alert("Only image/video supported");
-      return;
-    }
+    // no follow-state listener for owner
+    return () => { unsubCounts?.(); unsubCounts = null; };
+  }
 
-    const imgEl = document.getElementById("mediaPreview");
-    const vidEl = document.getElementById("videoPreview");
-    const captionEl = document.getElementById("mediaCaptionInput");
-
-    const url = URL.createObjectURL(file);
-
-    if (imgEl) {
-      imgEl.style.display = isImage ? "block" : "none";
-      if (isImage) imgEl.src = url;
-    }
-    if (vidEl) {
-      vidEl.style.display = isVideo ? "block" : "none";
-      if (isVideo) {
-        vidEl.src = url;
-        if (typeof vidEl.load === "function") vidEl.load();
-      }
-    }
-
-    if (captionEl) captionEl.value = "";
-
-    // store for upload button handler (your existing post upload code uses these)
-    window.__selectedMediaFile = file;
-    window.__selectedMediaType = isVideo ? "video" : "image";
-
-    openModalSafe("mediaCaptionModal");
-  };
-
-  const openMediaPostFlow = () => {
-    const picker = ensureMediaPicker();
-
-    // bind once only
-    if (!picker.__bound) {
-      picker.addEventListener("change", () => {
-        const file = picker.files?.[0];
-        if (!file) return;
-        openMediaModalWithFile(file);
-      });
-      picker.__bound = true;
-    }
-
-    // reset so same file reselect works
-    picker.value = "";
-    picker.click();
-  };
-
-  const bumpCountsUI = ({ following }) => {
-    const delta = following ? 1 : -1;
-
-    // ✅ target profile followers
-    const followersEl = document.getElementById("followersCount");
-    if (followersEl) followersEl.textContent = String((+followersEl.textContent || 0) + delta);
-
-    // ✅ my following (optional: only if you show it on profile page)
-    const followingEl = document.getElementById("followingCount");
-    if (followingEl) followingEl.textContent = String((+followingEl.textContent || 0) + delta);
-  };
-
- // ---------- OWNER ----------
-if (isOwner) {
-  followBtn.textContent = "Create Post";
-  msgBtn.textContent = "Add Story";
-
-  followBtn.onclick = () => {
-    imageInput?.click();
-  };
-
-  msgBtn.onclick = () => alert("Story feature coming soon");
-  return;
-}
-  // ---------- OTHER USER ----------
-  followBtn.textContent = "Follow";
+  // ================= OTHER USER VIEW =================
   msgBtn.textContent = "Message";
-  followBtn.classList.remove("is-following");
 
-  // ✅ Sync follow state on open
-  await syncFollowButtonState(profileUid, followBtn);
+  // counts listener
+  unsubCounts?.();
+  unsubCounts = startCounts(profileUid);
 
+  // follow-state listener (instant state sync)
+  unsubFollowState?.();
+  unsubFollowState = startFollowState(profileUid);
+
+  // follow click (optimistic UI)
   followBtn.onclick = async () => {
     if (!auth.currentUser) {
       promptSignup("Please signup to follow");
       return;
     }
 
-    followBtn.disabled = true;
+    const currentlyFollowing = followBtn.classList.contains("is-following");
+    const next = !currentlyFollowing;
+
+    // 0s-feel: update UI instantly
+    setFollowUI(next, true);
+
     try {
-      const { following } = await toggleFollow(profileUid);
-
-      followBtn.textContent = following ? "Following" : "Follow";
-      followBtn.classList.toggle("is-following", following);
-
-      bumpCountsUI({ following });
+      await toggleFollowFast(profileUid, next);
+      // onSnapshot will finalize UI; but we also unlock instantly
+      setFollowUI(next, false);
     } catch (e) {
       console.error(e);
+      // revert instantly if failed
+      setFollowUI(currentlyFollowing, false);
       alert("Follow failed");
-    } finally {
-      followBtn.disabled = false;
     }
   };
 
+  // message click
   msgBtn.onclick = () => {
     if (!auth.currentUser) {
       promptSignup("Please signup to message");
       return;
     }
 
-    const name =
-      (document.getElementById("profileName")?.textContent || "User").trim();
-
+    const name = (document.getElementById("profileName")?.textContent || "User").trim();
     const photo =
       document.getElementById("profilePicBig")?.src ||
       document.getElementById("profilePic")?.src ||
       "https://i.imgur.com/6VBx3io.png";
 
     gotoPage("message");
+
     if (typeof window.__openChat === "function") {
       window.__openChat(profileUid, { name, photo });
-    } else {
-      alert("Chat system not ready");
     }
+  };
+
+  // return cleanup function (call this when leaving profile page)
+  return () => {
+    unsubCounts?.(); unsubCounts = null;
+    unsubFollowState?.(); unsubFollowState = null;
   };
 }
 
 //search section//
-// ================= SEARCH MODULE (FAST + FIRESTORE HYDRATE: PIC + VERIFIED + TITLE + INSTANT PROFILE) =================
 (() => {
   const ALGOLIA_APP_ID = "ISIAJ0VOPF";
   const ALGOLIA_SEARCH_KEY = "2b2d1959f16482266e968fee717ee2bb";
