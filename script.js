@@ -5560,3 +5560,27 @@ function setProfileActionsForUid(profileUid) {
     setEmpty(resultsList, "Type to search users");
   });
 })();
+
+//privecy policy//
+document.addEventListener("DOMContentLoaded", function(){
+
+const privacyBtn = document.getElementById("privacyBtn");
+const privacyPage = document.getElementById("privacyPage");
+const privacyBack = document.getElementById("privacyBack");
+const settingsPage = document.getElementById("settingsPage");
+
+if(privacyBtn){
+  privacyBtn.addEventListener("click", function(){
+    settingsPage.style.display = "none";
+    privacyPage.style.display = "block";
+  });
+}
+
+if(privacyBack){
+  privacyBack.addEventListener("click", function(){
+    privacyPage.style.display = "none";
+    settingsPage.style.display = "block";
+  });
+}
+
+});
