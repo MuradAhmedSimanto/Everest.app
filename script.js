@@ -5573,6 +5573,8 @@ if(privacyBtn){
   privacyBtn.addEventListener("click", function(){
     settingsPage.style.display = "none";
     privacyPage.style.display = "block";
+
+    history.pushState({page:"privacy"}, "", "");
   });
 }
 
@@ -5583,4 +5585,12 @@ if(privacyBack){
   });
 }
 
+window.addEventListener("popstate", function(){
+  if(privacyPage.style.display === "block"){
+    privacyPage.style.display = "none";
+    settingsPage.style.display = "block";
+  }
 });
+
+});
+
