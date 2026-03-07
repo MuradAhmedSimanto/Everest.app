@@ -5594,3 +5594,29 @@ window.addEventListener("popstate", function(){
 
 });
 
+//about//
+document.addEventListener("DOMContentLoaded", function(){
+
+const aboutBtn = document.getElementById("aboutBtn");
+const aboutPage = document.getElementById("aboutPage");
+const aboutBack = document.getElementById("aboutBack");
+const settingsPage = document.getElementById("settingsPage");
+
+if(aboutBtn){
+  aboutBtn.addEventListener("click", function(){
+    settingsPage.style.display = "none";
+    aboutPage.style.display = "block";
+  });
+}
+
+if(aboutBack){
+  aboutBack.addEventListener("click", function(){
+    aboutPage.style.display = "none";
+    settingsPage.style.display = "block";
+  });
+}
+
+});
+
+
+
