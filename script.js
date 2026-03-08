@@ -4893,7 +4893,7 @@ function renderPageSPA(page){
   if (!PAGE_IDS[page]) page = "home";
 
   hideAllPagesSPA();
-  //new add 
+  
   if (page !== "settings") {
     document.body.classList.remove("settings-open");
   }
@@ -5647,3 +5647,203 @@ window.addEventListener("popstate", function(){
 
 });
 
+//language//
+/* ================= LANGUAGE SYSTEM ================= */
+const languageItem   = document.getElementById("languageItem");
+const languagePage   = document.getElementById("languagePage");
+const languageBack   = document.getElementById("languageBack");
+const englishToggle  = document.getElementById("englishToggle");
+const banglaToggle   = document.getElementById("banglaToggle");
+const privacyPageEl  = document.getElementById("privacyPage");
+const aboutPageEl    = document.getElementById("aboutPage");
+
+const LANG_DATA = {
+  en: {
+    settingsTitle: "Settings",
+    settingsLanguageText: "Language",
+    settingsDarkModeText: "Dark Mode",
+    settingsPersonalDetailsText: "Personal Details",
+    settingsChangePasswordText: "Change Password",
+    settingsGetVerifiedText: "Get Verified",
+    settingsPrivacyText: "Privacy Policy",
+    settingsHelpText: "Help and support",
+    settingsAboutText: "About",
+
+    langPageTitle: "Change Language",
+    langEnglishText: "English",
+    langBanglaText: "Bangla",
+
+    privacyTitle: "Privacy Policy",
+    privacyIntro: "Welcome to Everest. Your privacy is important to us. This Privacy Policy explains how Everest collects, uses, and protects your information when you use our platform.",
+    privacyH1: "1. Information We Collect",
+    privacyP1: "When you use Everest, we may collect the following information:",
+    privacyLi1: "Personal information such as your name, email address, and profile details.",
+    privacyLi2: "Content you create such as posts, comments, photos, and messages.",
+    privacyLi3: "Device and usage information including browser type, IP address, and activity on the platform.",
+    privacyH2: "2. How We Use Your Information",
+    privacyLi4: "Provide and improve Everest services.",
+    privacyLi5: "Allow you to create posts and interact with users.",
+    privacyLi6: "Keep the platform safe and prevent spam.",
+    privacyLi7: "Improve user experience.",
+    privacyH3: "3. Data Protection",
+    privacyP2: "Everest takes appropriate security measures to protect your personal information from unauthorized access, misuse, or loss. We use modern security practices and restricted access systems to safeguard user data. However, because the internet is not completely secure, we cannot guarantee absolute protection of all information.",
+    privacyH4: "4. Sharing Information",
+    privacyP3: "Everest does not sell or trade your personal data to third parties. Information may only be shared when necessary to operate the platform, comply with legal obligations, or protect the safety and rights of our users and services.",
+    privacyH5: "5. User Control",
+    privacyLi8: "Edit your personal information.",
+    privacyLi9: "Delete posts or content.",
+    privacyLi10: "Request account deletion.",
+    privacyH6: "6. Cookies",
+    privacyP4: "Everest may use cookies to enhance site performance, remember user preferences, and improve the overall browsing experience. Disabling cookies may limit certain features of the platform.",
+    privacyH7: "7. Changes to Privacy Policy",
+    privacyP5: "We may update this Privacy Policy occasionally to reflect improvements or legal requirements. The updated version will always be published on this page with the latest revision date.",
+    privacyH8: "8. Contact Us",
+    privacyP6: "If you have any questions or concerns about this Privacy Policy, you can contact us through the Everest support system within the platform.",
+
+    aboutTitle: "About – Everest",
+    aboutH1: "Welcome to Everest",
+    aboutP1: "Everest is a modern and innovative social networking platform created to bring people closer together in the digital world. It is a place where users can connect, communicate, share ideas, and express themselves freely. Everest is designed to make online interaction simple, enjoyable, and meaningful for everyone.",
+    aboutH2: "1. Our Platform",
+    aboutP2: "Everest allows users to create their own profiles and build their online identity. On the platform, people can share posts, upload photos and videos, and interact with others through likes, comments, and shares.",
+    aboutP3: "The platform is built to make communication easy and engaging so that users can stay connected with friends, family, and new people from around the world.",
+    aboutH3: "2. Our Mission",
+    aboutP4: "Our mission is to connect people from different cultures, places, and backgrounds through one simple platform. Everest aims to create a friendly and welcoming online space where everyone can share their thoughts, experiences, creativity, and moments without barriers.",
+    aboutH4: "3. What You Can Do",
+    aboutLi1: "Creating and sharing posts with the community",
+    aboutLi2: "Uploading photos and videos",
+    aboutLi3: "Following friends and discovering new people",
+    aboutLi4: "Liking, commenting, and sharing content",
+    aboutLi5: "Expressing thoughts, ideas, and daily moments",
+    aboutH5: "4. Community",
+    aboutP5: "Everest focuses on building a positive and respectful online community. The platform encourages users to communicate kindly, support each other, and share meaningful content.",
+    aboutH6: "5. Our Vision",
+    aboutP6: "Our vision is to grow Everest into a global social networking platform where people from every corner of the world can easily connect, communicate, and share their stories.",
+    aboutH7: "6. Our Goal",
+    aboutP7: "Our goal is to build a simple, fast, and user-friendly social media platform that anyone can use easily."
+  },
+
+  bn: {
+    settingsTitle: "সেটিংস",
+    settingsLanguageText: "ভাষা",
+    settingsDarkModeText: "ডার্ক মোড",
+    settingsPersonalDetailsText: "ব্যক্তিগত তথ্য",
+    settingsChangePasswordText: "পাসওয়ার্ড পরিবর্তন",
+    settingsGetVerifiedText: "ভেরিফাইড নিন",
+    settingsPrivacyText: "প্রাইভেসি পলিসি",
+    settingsHelpText: "হেল্প এবং সাপোর্ট",
+    settingsAboutText: "অ্যাবাউট",
+
+    langPageTitle: "ভাষা পরিবর্তন",
+    langEnglishText: "ইংলিশ",
+    langBanglaText: "বাংলা",
+
+    privacyTitle: "প্রাইভেসি পলিসি",
+    privacyIntro: "Everest-এ আপনাকে স্বাগতম। আপনার গোপনীয়তা আমাদের কাছে গুরুত্বপূর্ণ। এই Privacy Policy ব্যাখ্যা করে Everest কীভাবে আপনার তথ্য সংগ্রহ, ব্যবহার এবং সুরক্ষা করে যখন আপনি আমাদের প্ল্যাটফর্ম ব্যবহার করেন।",
+    privacyH1: "১. আমরা কী তথ্য সংগ্রহ করি",
+    privacyP1: "আপনি Everest ব্যবহার করলে আমরা নিচের তথ্য সংগ্রহ করতে পারি:",
+    privacyLi1: "আপনার নাম, ইমেইল ঠিকানা এবং প্রোফাইল সম্পর্কিত ব্যক্তিগত তথ্য।",
+    privacyLi2: "আপনার তৈরি করা কনটেন্ট যেমন পোস্ট, কমেন্ট, ছবি এবং মেসেজ।",
+    privacyLi3: "ডিভাইস ও ব্যবহারসংক্রান্ত তথ্য যেমন browser type, IP address, এবং platform activity।",
+    privacyH2: "২. আপনার তথ্য কীভাবে ব্যবহার করি",
+    privacyLi4: "Everest সেবা প্রদান ও উন্নত করতে।",
+    privacyLi5: "আপনাকে পোস্ট তৈরি ও অন্যদের সাথে যোগাযোগ করতে দিতে।",
+    privacyLi6: "প্ল্যাটফর্ম নিরাপদ রাখতে এবং spam প্রতিরোধ করতে।",
+    privacyLi7: "ব্যবহারকারীর অভিজ্ঞতা উন্নত করতে।",
+    privacyH3: "৩. তথ্য সুরক্ষা",
+    privacyP2: "Everest আপনার ব্যক্তিগত তথ্যকে অননুমোদিত প্রবেশ, অপব্যবহার বা ক্ষতি থেকে রক্ষা করতে উপযুক্ত নিরাপত্তা ব্যবস্থা গ্রহণ করে। আমরা আধুনিক নিরাপত্তা পদ্ধতি এবং সীমিত access system ব্যবহার করি। তবে ইন্টারনেট সম্পূর্ণ নিরাপদ নয়, তাই আমরা সব তথ্যের শতভাগ নিরাপত্তা নিশ্চিত করতে পারি না।",
+    privacyH4: "৪. তথ্য শেয়ারিং",
+    privacyP3: "Everest আপনার ব্যক্তিগত তথ্য তৃতীয় পক্ষের কাছে বিক্রি বা বাণিজ্য করে না। শুধুমাত্র প্ল্যাটফর্ম পরিচালনা, আইনগত বাধ্যবাধকতা পালন, অথবা ব্যবহারকারী ও সেবার নিরাপত্তা রক্ষার প্রয়োজন হলে তথ্য শেয়ার করা হতে পারে।",
+    privacyH5: "৫. ব্যবহারকারীর নিয়ন্ত্রণ",
+    privacyLi8: "নিজের ব্যক্তিগত তথ্য সম্পাদনা করতে পারবেন।",
+    privacyLi9: "পোস্ট বা কনটেন্ট মুছতে পারবেন।",
+    privacyLi10: "অ্যাকাউন্ট ডিলিটের অনুরোধ করতে পারবেন।",
+    privacyH6: "৬. কুকিজ",
+    privacyP4: "Everest site performance উন্নত করতে, user preference মনে রাখতে এবং browsing experience ভালো করতে cookies ব্যবহার করতে পারে। Cookies বন্ধ করলে কিছু feature সীমিত হতে পারে।",
+    privacyH7: "৭. Privacy Policy পরিবর্তন",
+    privacyP5: "উন্নয়ন বা আইনগত প্রয়োজন অনুযায়ী আমরা সময় সময় এই Privacy Policy আপডেট করতে পারি। আপডেটেড version সবসময় এই page-এ প্রকাশ করা হবে।",
+    privacyH8: "৮. যোগাযোগ করুন",
+    privacyP6: "এই Privacy Policy সম্পর্কে আপনার কোনো প্রশ্ন বা উদ্বেগ থাকলে Everest support system-এর মাধ্যমে আমাদের সাথে যোগাযোগ করতে পারেন।",
+
+    aboutTitle: "অ্যাবাউট – Everest",
+    aboutH1: "Everest-এ স্বাগতম",
+    aboutP1: "Everest একটি আধুনিক ও উদ্ভাবনী social networking platform, যা মানুষকে ডিজিটাল দুনিয়ায় আরও কাছাকাছি নিয়ে আসার জন্য তৈরি। এখানে ব্যবহারকারীরা connect করতে, যোগাযোগ করতে, ধারণা শেয়ার করতে এবং নিজেদের স্বাধীনভাবে প্রকাশ করতে পারে।",
+    aboutH2: "১. আমাদের প্ল্যাটফর্ম",
+    aboutP2: "Everest ব্যবহারকারীদের নিজস্ব profile তৈরি এবং online identity গড়ার সুযোগ দেয়। এখানে মানুষ পোস্ট শেয়ার করতে, ছবি ও ভিডিও upload করতে এবং likes, comments ও shares-এর মাধ্যমে অন্যদের সাথে interact করতে পারে।",
+    aboutP3: "এই প্ল্যাটফর্মটি সহজ ও আকর্ষণীয় যোগাযোগের জন্য তৈরি, যাতে ব্যবহারকারীরা বন্ধু, পরিবার এবং বিশ্বের নতুন মানুষের সাথে সংযুক্ত থাকতে পারে।",
+    aboutH3: "২. আমাদের মিশন",
+    aboutP4: "আমাদের মিশন হলো বিভিন্ন সংস্কৃতি, স্থান ও পটভূমির মানুষকে একটি সহজ প্ল্যাটফর্মে সংযুক্ত করা। Everest এমন একটি বন্ধুত্বপূর্ণ ও স্বাগতপূর্ণ online space তৈরি করতে চায় যেখানে সবাই নিজের চিন্তা, অভিজ্ঞতা, সৃজনশীলতা ও মুহূর্ত শেয়ার করতে পারে।",
+    aboutH4: "৩. আপনি কী করতে পারবেন",
+    aboutLi1: "কমিউনিটির সাথে পোস্ট তৈরি ও শেয়ার করা",
+    aboutLi2: "ছবি ও ভিডিও আপলোড করা",
+    aboutLi3: "বন্ধুদের follow করা এবং নতুন মানুষ খুঁজে পাওয়া",
+    aboutLi4: "লাইক, কমেন্ট এবং শেয়ার করা",
+    aboutLi5: "নিজের চিন্তা, আইডিয়া ও দৈনন্দিন মুহূর্ত প্রকাশ করা",
+    aboutH5: "৪. কমিউনিটি",
+    aboutP5: "Everest একটি ইতিবাচক ও সম্মানজনক online community গড়ে তুলতে গুরুত্ব দেয়। প্ল্যাটফর্মটি ব্যবহারকারীদের সদয়ভাবে যোগাযোগ করতে, একে অপরকে support করতে এবং meaningful content শেয়ার করতে উৎসাহ দেয়।",
+    aboutH6: "৫. আমাদের ভিশন",
+    aboutP6: "আমাদের ভিশন হলো Everest-কে একটি global social networking platform-এ পরিণত করা যেখানে বিশ্বের সব প্রান্তের মানুষ সহজে connect, communicate এবং নিজেদের গল্প শেয়ার করতে পারে।",
+    aboutH7: "৬. আমাদের লক্ষ্য",
+    aboutP7: "আমাদের লক্ষ্য হলো একটি সহজ, দ্রুত এবং user-friendly social media platform তৈরি করা যা সবাই সহজে ব্যবহার করতে পারে।"
+  }
+};
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function applyLanguage(lang) {
+  const data = LANG_DATA[lang] || LANG_DATA.en;
+
+  Object.keys(data).forEach((key) => {
+    setText(key, data[key]);
+  });
+
+  localStorage.setItem("appLanguage", lang);
+
+  if (englishToggle) englishToggle.checked = (lang === "en");
+  if (banglaToggle) banglaToggle.checked = (lang === "bn");
+}
+
+function openLanguagePage() {
+  if (settingsPage) settingsPage.style.display = "none";
+  if (privacyPageEl) privacyPageEl.style.display = "none";
+  if (aboutPageEl) aboutPageEl.style.display = "none";
+  if (languagePage) languagePage.style.display = "block";
+}
+
+function closeLanguagePage() {
+  if (languagePage) languagePage.style.display = "none";
+  if (settingsPage) settingsPage.style.display = "block";
+}
+
+languageItem?.addEventListener("click", () => {
+  openLanguagePage();
+});
+
+languageBack?.addEventListener("click", () => {
+  closeLanguagePage();
+});
+
+englishToggle?.addEventListener("change", () => {
+  if (!englishToggle.checked) {
+    englishToggle.checked = true;
+    return;
+  }
+  banglaToggle.checked = false;
+  applyLanguage("en");
+});
+
+banglaToggle?.addEventListener("change", () => {
+  if (!banglaToggle.checked) {
+    banglaToggle.checked = true;
+    return;
+  }
+  englishToggle.checked = false;
+  applyLanguage("bn");
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem("appLanguage") || "en";
+  applyLanguage(savedLang);
+});
