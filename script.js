@@ -5606,6 +5606,8 @@ if(aboutBtn){
   aboutBtn.addEventListener("click", function(){
     settingsPage.style.display = "none";
     aboutPage.style.display = "block";
+
+    history.pushState({page:"about"}, "", "");
   });
 }
 
@@ -5616,7 +5618,12 @@ if(aboutBack){
   });
 }
 
+window.addEventListener("popstate", function(){
+  if(aboutPage.style.display === "block"){
+    aboutPage.style.display = "none";
+    settingsPage.style.display = "block";
+  }
 });
 
-
+});
 
