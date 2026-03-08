@@ -4798,10 +4798,7 @@ function renderPageSPA(page){
   if (!PAGE_IDS[page]) page = "home";
 
   hideAllPagesSPA();
-  //new add 
- if (page !== "settings") {
-    document.body.classList.remove("settings-open");
-  }
+ 
 
   const el = document.getElementById(PAGE_IDS[page]);
   if (el) el.style.display = "block";
@@ -4896,6 +4893,10 @@ function renderPageSPA(page){
   if (!PAGE_IDS[page]) page = "home";
 
   hideAllPagesSPA();
+  //new add 
+  if (page !== "settings") {
+    document.body.classList.remove("settings-open");
+  }
   const el = document.getElementById(PAGE_IDS[page]);
   if (el) el.style.display = "block";
   // ✅ profile-mode class
