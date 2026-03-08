@@ -5452,6 +5452,8 @@ function setProfileActionsForUid(profileUid) {
       searchOverlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("search-open");
 
+      history.pushState({searchOpen:true}, "", "#search");
+
       searchInput.value = "";
       setEmpty(resultsList, "Type to search users");
       setTimeout(() => searchInput.focus(), 10);
@@ -5566,6 +5568,19 @@ function setProfileActionsForUid(profileUid) {
   });
 })();
 
+
+
+window.addEventListener("popstate", function () {
+
+  if (searchOverlay && searchOverlay.style.display === "flex") {
+
+    searchOverlay.style.display = "none";
+    searchOverlay.setAttribute("aria-hidden","true");
+    document.body.classList.remove("search-open");
+
+  }
+
+});
 //privecy policy//
 document.addEventListener("DOMContentLoaded", function(){
 
