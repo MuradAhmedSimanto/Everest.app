@@ -5810,6 +5810,7 @@ function openLanguagePage() {
   if (privacyPageEl) privacyPageEl.style.display = "none";
   if (aboutPageEl) aboutPageEl.style.display = "none";
   if (languagePage) languagePage.style.display = "block";
+  history.pushState({ page: "language" }, "");
 }
 
 function closeLanguagePage() {
@@ -5846,4 +5847,15 @@ banglaToggle?.addEventListener("change", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const savedLang = localStorage.getItem("appLanguage") || "en";
   applyLanguage(savedLang);
+});
+
+languageBack.addEventListener("click", () => {
+  history.back();
+});
+
+window.addEventListener("popstate", function () {
+  if (languagePage.style.display === "block") {
+    languagePage.style.display = "none";
+    settingsPage.style.display = "block";
+  }
 });
